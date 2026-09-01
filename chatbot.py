@@ -312,7 +312,7 @@ with st.sidebar:
 st.markdown(
     """
     <div class="hero">
-        <div class="hero-icon">🤖</div>
+        <div class="hero-icon">🐉</div>
         <h1 class="hero-title">Groq AI Assistant</h1>
         <div class="hero-subtitle">
             Fast • Intelligent • Powerful
@@ -377,7 +377,7 @@ if len(st.session_state.messages) == 0:
 # =========================================================
 for message in st.session_state.messages:
 
-    avatar = "🧑" if message["role"] == "user" else "🤖"
+    avatar = "🧑" if message["role"] == "user" else "🐉"
 
     with st.chat_message(
         message["role"],
@@ -428,7 +428,7 @@ if user_input:
         # Assistant response
         with st.chat_message(
             "assistant",
-            avatar="🤖"
+            avatar="🐉"
         ):
 
             response_placeholder = st.empty()
