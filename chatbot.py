@@ -5,7 +5,7 @@ from groq import Groq
 # PAGE CONFIGURATION
 # =========================================================
 st.set_page_config(
-    page_title="Groq AI Assistant",
+    page_title="Groq AI ",
     page_icon="🐉",
     layout="wide",
     initial_sidebar_state="expanded"
