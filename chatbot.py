@@ -242,6 +242,8 @@ with st.sidebar:
         placeholder="gsk_...",
         help="Enter your Groq API key."
     )
+    # FIX: strip stray whitespace users often paste in accidentally
+    api_key = api_key.strip() if api_key else ""
 
     st.caption("🔒 Your API key is only used for this session.")
 
@@ -451,7 +453,13 @@ if user_input:
                 if not chunk.choices:
                     continue
 
-                content = chunk.choices[0].delta.content
+                # FIX: delta can be None on some chunks (e.g. the
+                # final chunk that only carries finish_reason).
+                # The original code called .content directly on it,
+                # which raises AttributeError: 'NoneType' object has
+                # no attribute 'content' and crashes the whole request.
+                delta = chunk.choices[0].delta
+                content = getattr(delta, "content", None) if delta else None
 
                 if content:
                     full_response += content
@@ -459,6 +467,12 @@ if user_input:
                     response_placeholder.markdown(
                         full_response + "▌"
                     )
+
+            # FIX: guard against an empty response (e.g. the model
+            # returned nothing, or was cut off). Saving/displaying an
+            # empty assistant bubble looks like a broken app.
+            if not full_response.strip():
+                full_response = "⚠️ The model returned an empty response. Please try again."
 
             # Final response
             response_placeholder.markdown(
@@ -474,6 +488,19 @@ if user_input:
         )
 
     except Exception as e:
+
+        # FIX: the original code left the just-appended user message
+        # in st.session_state.messages with no matching assistant
+        # reply whenever the API call failed. That "orphaned" message
+        # would silently get resent as context on the next turn.
+        # Roll it back so history stays consistent, and let the user
+        # retry cleanly.
+        if (
+            st.session_state.messages
+            and st.session_state.messages[-1]["role"] == "user"
+            and st.session_state.messages[-1]["content"] == user_input
+        ):
+            st.session_state.messages.pop()
 
         st.error(
             f"❌ Something went wrong: {str(e)}"
@@ -493,4 +520,3 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
-```
